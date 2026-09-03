@@ -60,6 +60,82 @@ This plan is built directly from the RaceDay ERD (`raceday_erd.png`) and `raceda
 
 ---
 
+SQL ERD 
+Table Users {
+  UserID int [pk, increment]
+  FirstName varchar
+  LastName varchar
+  Email varchar [unique, not null]
+  PasswordHash varchar [not null]
+  Role varchar [not null, note: "Organiser or Participant"]
+  PhoneNumber varchar
+  CreatedAt datetime [default: `now()`]
+}
+
+Table Events {
+  EventID int [pk, increment]
+  OrganiserID int [not null]
+  Name varchar [not null]
+  Description text
+  EventDate datetime [not null]
+  Location varchar [not null]
+  DistanceKm decimal [not null]
+  EventType varchar [not null, note: "Run, Walk, or Cycle"]
+  BannerImageUrl varchar
+  CreatedAt datetime [default: `now()`]
+}
+
+Table Categories {
+  CategoryID int [pk, increment]
+  EventID int [not null]
+  CategoryName varchar [not null]
+  MinAge int
+  MaxAge int
+  DistanceKm decimal
+}
+
+Table Routes {
+  RouteID int [pk, increment]
+  EventID int [not null]
+  RouteName varchar [not null]
+  DistanceKm decimal [not null]
+  ElevationGainM int
+  StartPoint varchar
+  EndPoint varchar
+  MapUrl varchar
+}
+
+Table Enrolments {
+  EnrolmentID int [pk, increment]
+  ParticipantID int [not null]
+  EventID int [not null]
+  CategoryID int [not null]
+  EnrolmentStatus varchar [not null, default: "Pending", note: "Pending, Confirmed, Cancelled"]
+  EnrolmentDate datetime [default: `now()`]
+
+  indexes {
+    (ParticipantID, EventID) [unique]
+  }
+}
+
+Table Results {
+  ResultID int [pk, increment]
+  EnrolmentID int [not null, unique]
+  FinishTimeSeconds int [not null]
+  FinishPosition int [not null]
+  TotalFinishers int [not null]
+  PublishedAt datetime [default: `now()`]
+}
+
+// Relationships
+Ref: Events.OrganiserID > Users.UserID          // one Organiser -> many Events
+Ref: Categories.EventID > Events.EventID        // one Event -> many Categories
+Ref: Routes.EventID > Events.EventID            // one Event -> many Routes
+Ref: Enrolments.ParticipantID > Users.UserID    // one Participant -> many Enrolments
+Ref: Enrolments.EventID > Events.EventID        // one Event -> many Enrolments
+Ref: Enrolments.CategoryID > Categories.CategoryID // one Category -> many Enrolments
+Ref: Results.EnrolmentID - Enrolments.EnrolmentID  // one Enrolment -> one Result (0..1)
+
 ### Coverage check against Part 2 functional requirements
 - **Authentication:** register + login ✔
 - **User Profile:** view + update own profile, both roles ✔
